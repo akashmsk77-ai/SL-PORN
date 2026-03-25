@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SL PORN — Cinema Streaming</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0b;
+      --bg-elevated: #111113;
+      --fg: #fafafa;
+      --muted: #6b6b6b;
+      --accent: #e8b923;
+      --accent-dim: #c49f1a;
+      --card: #161618;
+      --card-hover: #1c1c1f;
+      --border: #2a2a2d;
+      --glass: rgba(22, 22, 24, 0.7);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      overflow-x: hidden;
+    }
+
+    .font-display {
+      font-family: 'Bebas Neue', sans-serif;
+      letter-spacing: 0.02em;
+    }
+
+    /* Background atmosphere */
+    .bg-atmosphere {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .bg-atmosphere::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: 
+        radial-gradient(ellipse 800px 600px at 20% 20%, rgba(232, 185, 35, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse 600px 400px at 80% 80%, rgba(232, 185, 35, 0.05) 0%, transparent 50%);
+      animation: float 20s ease-in-out infinite;
+    }
+
+    .bg-noise {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      50% { transform: translate(2%, 2%) rotate(1deg); }
+    }
+
+    /* Reveal animations */
+    .reveal {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), 
+                  transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-delay-4 { transition-delay: 0.4s; }
+
+    /* Film card */
+    .film-card {
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .film-card:hover {
+      transform: scale(1.05);
+      z-index: 10;
+    }
+
+    .film-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .film-card:hover::after {
+      opacity: 1;
+    }
+
+    .film-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .film-card:hover img {
+      transform: scale(1.1);
+    }
+
+    .film-info {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 20px;
+      z-index: 2;
+      transform: translateY(20px);
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+
+    .film-card:hover .film-info {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* Play button */
+    .play-btn {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.8);
+      width: 64px;
+      height: 64px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      z-index: 3;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 0 40px rgba(232, 185, 35, 0.4);
+    }
+
+    .film-card:hover .play-btn {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .play-btn:hover {
+      background: var(--accent-dim);
+      transform: translate(-50%, -50%) scale(1.1);
+    }
+
+    /* Category pills */
+    .category-pill {
+      padding: 10px 24px;
+      border-radius: 100px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .category-pill:hover {
+      border-color: var(--accent);
+      color: var(--fg);
+    }
+
+    .category-pill.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--bg);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.9);
+      backdrop-filter: blur(20px);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-content {
+      background: var(--card);
+      border-radius: 20px;
+      max-width: 1000px;
+      width: 95%;
+      max-height: 90vh;
+      overflow: hidden;
+      transform: scale(0.95);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .modal-overlay.active .modal-content {
+      transform: scale(1);
+    }
+
+    /* Video player */
+    .video-container {
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%;
+      background: #000;
+    }
+
+    .video-container video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Search */
+    .search-input {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 20px 14px 50px;
+      color: var(--fg);
+      font-size: 15px;
+      width: 100%;
+      max-width: 400px;
+      transition: all 0.3s ease;
+    }
+
+    .search-input::placeholder {
+      color: var(--muted);
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(232, 185, 35, 0.1);
+    }
+
+    /* Button styles */
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+      padding: 14px 32px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 15px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-dim);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(232, 185, 35, 0.3);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--fg);
+      padding: 14px 32px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 15px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: var(--muted);
+    }
+
+    /* Rating stars */
+    .rating {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .rating svg {
+      fill: var(--accent);
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--muted);
+    }
+
+    /* Focus visible */
+    *:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    /* Hero film strip animation */
+    .film-strip {
+      display: flex;
+      gap: 20px;
+      animation: scroll 30s linear infinite;
+    }
+
+    @keyframes scroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    /* Quality badge */
+    .quality-badge {
+      background: var(--accent);
+      color: var(--bg);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+  </style>
+<script src="https://pl28978478.profitablecpmratenetwork.com/a0/8f/03/a08f030742bace07d95ddbd16d9cea4d.js"></script>
+
+</head>
+<body>
+  <!-- Background atmosphere -->
+  <div class="bg-atmosphere"></div>
+  <div class="bg-noise"></div>
+
+  <!-- Navigation -->
+  <nav class="fixed top-0 left-0 right-0 z-50 px-6 py-4">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <a href="#" class="font-display text-3xl tracking-wider" style="color: var(--accent);">Srilankan PORN</a>
+      
+      <div class="hidden md:flex items-center gap-8">
+        <a href="#" class="text-sm font-medium hover:text-white transition-colors" style="color: var(--muted);">Home</a>
+        <a href="#films" class="text-sm font-medium hover:text-white transition-colors" style="color: var(--muted);">Films</a>
+        <a href="#series" class="text-sm font-medium hover:text-white transition-colors" style="color: var(--muted);">Series</a>
+        <a href="#" class="text-sm font-medium hover:text-white transition-colors" style="color: var(--muted);">My List</a>
+      </div>
+      
+      <div class="flex items-center gap-4">
+        <div class="relative hidden sm:block">
+          <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style="color: var(--muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <input type="text" id="searchInput" class="search-input" placeholder="Search films...">
+        </div>
+        
+        <button class="w-10 h-10 rounded-full overflow-hidden border-2 border-transparent hover:border-[var(--accent)] transition-colors" aria-label="User profile">
+          <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR99-ZMZeEtYlFVdT-HN3Hz0f_i64Zf76D67g&s?w=80&h=80&fit=crop%22%20alt=%22User%22%20class=%22w-full%20h-full%20object-cover">
+        </button>
+      </div>
+    </div>
+  </nav>
+<script async="async" data-cfasync="false" src="https://pl28978800.profitablecpmratenetwork.com/6801d7f40f63e10e17ddb9267bf475d2/invoke.js"></script>
+<div id="container-6801d7f40f63e10e17ddb9267bf475d2"></div>
+
+  <!-- Hero Section -->
+  <section class="relative min-h-screen flex items-center pt-20">
+    <div class="absolute inset-0 z-0">
+      <div class="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent z-10"></div>
+      <div class="absolute inset-0 bg-gradient-to-t from-[var(--bg)] via-transparent to-transparent z-10"></div>
+      <img src="https://ic-vt-nss.xhcdn.com/a/YmQ4YTc3NjQ0YjI5NTM1ZGE0Njg4YmEwODc1MWUxYWI/s(w:2560,h:1440),webp/027/626/069/v2/2560x1440.229.webp?w=1920&q=80" alt="Featured film" class="w-full h-full object-cover opacity-50">
+">
+    </div>
+    
+    <div class="relative z-20 max-w-7xl mx-auto px-6 py-20">
+      <div class="max-w-2xl">
+        <div class="reveal flex items-center gap-3 mb-6">
+          <span class="quality-badge">4K HDR</span>
+          <span class="text-sm font-medium" style="color: var(--accent);">YOUR VIDEOS </span>
+        </div>
+        
+        <h1 class="reveal reveal-delay-1 font-display text-6xl md:text-8xl leading-none mb-6">
+          SRILANKAN SEX VIDEOS ONLINE
+        </h1>
+        
+        <div class="reveal reveal-delay-2 flex items-center gap-6 mb-6">
+          <div class="rating">
+            <svg class="w-5 h-5" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-5 h-5" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-5 h-5" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-5 h-5" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-5 h-5 opacity-30" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <span class="text-white font-semibold ml-2">8.9</span>
+          </div>
+          <span style="color: var(--muted);">2024</span>
+          <span style="color: var(--muted);">2h 46m</span>
+        </div>
+        
+        <p class="reveal reveal-delay-3 text-lg mb-8 leading-relaxed" style="color: var(--muted);">
+          SRILANKA'S NO#1 PORN VIDEO WEBSITE . THANK YOU FOR JOIN WITH US . SPECIAL WARNING SEXUAL CONTENT IS HERE .
+        </p>
+        
+        <div class="reveal reveal-delay-4 flex flex-wrap gap-4">
+          <button class="btn-primary" onclick="openModal(0)">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/></svg>
+            Watch Now
+          </button>
+          <button class="btn-secondary">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Add to List
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Scroll indicator -->
+    <div class="absolute bottom-10 left-1/2 -translate-x-1/2 z-20">
+      <div class="flex flex-col items-center gap-2 animate-bounce">
+        <span class="text-xs tracking-widest" style="color: var(--muted);">SCROLL</span>
+        <svg class="w-5 h-5" style="color: var(--muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- Categories Section -->
+  <section class="relative z-10 py-12 px-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="reveal flex flex-wrap gap-3" id="categoriesContainer">
+        <button class="category-pill active" data-category="all">All Films</button>
+        <button class="category-pill" data-category="action">Action</button>
+        <button class="category-pill" data-category="drama">Drama</button>
+        <button class="category-pill" data-category="sci-fi">Sci-Fi</button>
+        <button class="category-pill" data-category="thriller">Thriller</button>
+        <button class="category-pill" data-category="comedy">Comedy</button>
+        <button class="category-pill" data-category="horror">Horror</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Films Section -->
+  <section id="films" class="relative z-10 py-12 px-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="reveal flex items-end justify-between mb-10">
+        <div>
+          <h2 class="font-display text-4xl md:text-5xl mb-2">HOT WATCHING </h2>
+          <p style="color: var(--muted);">Most watched PORN this week</p>
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6" id="filmsGrid">
+        <!-- Films will be rendered here -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Continue Watching -->
+  <section id="series" class="relative z-10 py-12 px-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="reveal flex items-end justify-between mb-10">
+        <div>
+          <h2 class="font-display text-4xl md:text-5xl mb-2">CONTINUE WATCHING</h2>
+          <p style="color: var(--muted);">Pick up where you left off</p>
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="continueWatching">
+        <!-- Continue watching will be rendered here -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Top Rated -->
+  <section class="relative z-10 py-12 px-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="reveal flex items-end justify-between mb-10">
+        <div>
+          <h2 class="font-display text-4xl md:text-5xl mb-2">TOP RATED</h2>
+          <p style="color: var(--muted);">Critically acclaimed masterpieces</p>
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-5" id="topRated">
+        <!-- Top rated will be rendered here -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="relative z-10 py-16 px-6 border-t" style="border-color: var(--border);">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
+        <div>
+          <h3 class="font-display text-2xl mb-4" style="color: var(--accent);">SLPORN</h3>
+          <p class="text-sm leading-relaxed" style="color: var(--muted);">Premium cinema streaming experience. Watch the finest films from around the world.</p>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-4">Browse</h4>
+          <ul class="space-y-2 text-sm" style="color: var(--muted);">
+            <li><a href="#" class="hover:text-white transition-colors">New Releases</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Popular</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Genres</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Collections</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-4">Company</h4>
+          <ul class="space-y-2 text-sm" style="color: var(--muted);">
+            <li><a href="#" class="hover:text-white transition-colors">About Us</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Careers</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Press</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Contact</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-4">Legal</h4>
+          <ul class="space-y-2 text-sm" style="color: var(--muted);">
+            <li><a href="#" class="hover:text-white transition-colors">Terms of Service</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Privacy Policy</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Cookie Policy</a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="flex flex-col md:flex-row items-center justify-between pt-8 border-t" style="border-color: var(--border);">
+        <p class="text-sm" style="color: var(--muted);">2024 LUMIÈRE. All rights reserved.</p>
+        <div class="flex items-center gap-4 mt-4 md:mt-0">
+          <a href="#" class="w-10 h-10 rounded-full flex items-center justify-center transition-colors" style="background: var(--card);" aria-label="Twitter">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          </a>
+          <a href="#" class="w-10 h-10 rounded-full flex items-center justify-center transition-colors" style="background: var(--card);" aria-label="Instagram">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Video Modal -->
+  <div class="modal-overlay" id="videoModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-content">
+      <div class="video-container">
+        <video id="videoPlayer" controls>
+          <source src="" type="video/mp4">
+        </video>
+      </div>
+      <div class="p-6">
+        <div class="flex items-start justify-between mb-4">
+          <div>
+            <h3 id="modalTitle" class="font-display text-3xl mb-2"></h3>
+            <div class="flex items-center gap-4">
+              <span id="modalYear" style="color: var(--muted);"></span>
+              <span id="modalDuration" style="color: var(--muted);"></span>
+              <span id="modalRating" class="flex items-center gap-1"></span>
+            </div>
+          </div>
+          <button onclick="closeModal()" class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors" aria-label="Close modal">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <p id="modalDescription" class="leading-relaxed mb-6" style="color: var(--muted);"></p>
+        <div class="flex flex-wrap gap-3">
+          <span id="modalGenres" class="flex gap-2"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Film data
+    const films = [
+      {
+        id: 1,
+        title: "Dune: Part Two",
+        year: 2024,
+        duration: "2h 46m",
+        rating: 8.9,
+        genre: ["sci-fi", "action"],
+        image: "https://tbi.sb-cd.com/t/12329368/1/2/w:300/t6-enh/c4-sofi-1996-pawg-tits-show.jpg?w=400&h=600&fit=crop",
+        description: "Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.",
+        videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4"
+      },
+      {
+        id: 2,
+        title: "Oppenheimer",
+        year: 2023,
+        duration: "3h 0m",
+        rating: 8.5,
+        genre: ["drama", "thriller"],
+        image: "https://desipornphoto.com/wp-content/uploads/2023/11/Hot-Big-Ass-Desi-Girl-Naked-In-Sexy-Black-Bra-and-Panty-in-Bathroom1-520x945.jpg?w=400&h=600&fit=crop",
+        description: "The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb.",
+        videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4"
+      },
+      {
+        id: 3,
+        title: "The Batman",
+        year: 2022,
+        duration: "2h 56m",
+        rating: 7.8,
+        genre: ["action", "thriller"],
+        image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR-YRItazww75pHLc-JIZnaLADOmHm0p_bkwQ&s?w=400&h=600&fit=crop",
+        description: "When a sadistic serial killer begins murdering key political figures in Gotham, Batman is forced to investigate.",
+        videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4"
+      },
+      {
+        id: 4,
+        title: "Interstellar",
+        year: 2014,
+        duration: "2h 49m",
+        rating: 8.7,
+        genre: ["sci-fi", "drama"],
+        image: "https://cdn7.youx.xxx/videos/th/195000/195610/preview.mp4.jpg?w=400&h=600&fit=crop",
+        description: "A team of explorers travel through a wormhole in space in an attempt to ensure humanity's survival.",
+        videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4"
+      },
+      {
+        id: 5,
+        title: "The Dark Knight",
+        year: 2008,
+        duration: "2h 32m",
+        rating: 9.0,
+        genre: ["action", "drama"],
+        image: "https://thumbs.xfree.com/listing/small/6fe9ca78-d433-4844-ac96-da442cb1a79d_1.webp?w=400&h=600&fit=crop",
+        description: "When the menace known as the Joker wreaks havoc on Gotham, Batman must accept one of the greatest psychological tests.",
+        videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4"
+      },
+      {
+        id: 6,
+        title: "Blade Runner 2049",
+        year: 2017,
+        duration: "2h 44m",
+        rating: 8.0,
+        genre: ["sci-fi", "thriller"],
+        image: "https://img34.imagetwist.com/i/66333/ghtouy05ya5e.jpeg/IMG_20241208_08341359.jpeg?w=400&h=600&fit=crop",
+        description: "A young blade runner's discovery of a long-buried secret leads him to track down former blade runner Rick Deckard.",
+        videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4"
+      },
+      {
+        id: 7,
+        title: "Parasite",
+        year: 2019,
+        duration: "2h 12m",
+        rating: 8.5,
+        genre: ["drama", "thriller"],
+        image: "https://ic-vt-nss.xhcdn.com/a/MWUxNGVhNGYzMGVmOTkwMTkwNzg5MTIwZjM1NTY1YTE/s(w:405,h:720),webp/026/159/375/orig.5.jpg?w=400&h=600&fit=crop",
+        description: "Greed and class discrimination threaten the newly formed symbiotic relationship between the wealthy Park family and the destitute Kim clan.",
+        videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4"
+      },
+      {
+        id: 8,
+        title: "Mad Max: Fury Road",
+        year: 2015,
+        duration: "2h 0m",
+        rating: 8.1,
+        genre: ["action", "sci-fi"],
+        image: "https://thumbs.xfree.com/listing/small/fcaa497a-6f29-4a76-b01d-62fe29745563_1.webp?w=400&h=600&fit=crop",
+        description: "In a post-apocalyptic wasteland, a woman rebels against a tyrannical ruler in search for her homeland.",
+        videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4"
+      },
+      {
+        id: 9,
+        title: "The Shining",
+        year: 1980,
+        duration: "2h 26m",
+        rating: 8.4,
+        genre: ["horror", "drama"],
+        image: "https://thumbs.xfree.com/listing/small/3081b5a8-388c-4fac-8238-b021b4768cae_1.webp?w=400&h=600&fit=crop",
+        description: "A family heads to an isolated hotel for the winter where a sinister presence influences the father into violence.",
+        videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4"
+      },
+      {
+        id: 10,
+        title: "Pulp Fiction",
+        year: 1994,
+        duration: "2h 34m",
+        rating: 8.9,
+        genre: ["drama", "thriller"],
+        image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS3vN_WfcoCzGO40vlLyL-qJJ9_YqqOSi9o3w&s?w=400&h=600&fit=crop",
+        description: "The lives of two mob hitmen, a boxer, a gangster and his wife intertwine in four tales of violence and redemption.",
+        videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4"
+      }
+    ];
+
+    const continueWatchingData = [
+      { ...films[0], progress: 65, episode: "N/A" },
+      { ...films[3], progress: 32, episode: "N/A" },
+      { ...films[5], progress: 78, episode: "N/A" }
+    ];
+
+    // DOM Elements
+    const filmsGrid = document.getElementById('filmsGrid');
+    const continueWatchingEl = document.getElementById('continueWatching');
+    const topRatedEl = document.getElementById('topRated');
+    const modal = document.getElementById('videoModal');
+    const videoPlayer = document.getElementById('videoPlayer');
+    const searchInput = document.getElementById('searchInput');
+    const categoryPills = document.querySelectorAll('.category-pill');
+
+    // State
+    let currentCategory = 'all';
+    let searchQuery = '';
+
+    // Render functions
+    function renderFilms() {
+      let filteredFilms = films;
+      
+      if (currentCategory !== 'all') {
+        filteredFilms = films.filter(film => film.genre.includes(currentCategory));
+      }
+      
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        filteredFilms = filteredFilms.filter(film => 
+          film.title.toLowerCase().includes(query)
+        );
+      }
+
+      filmsGrid.innerHTML = filteredFilms.map((film, index) => `
+        <div class="film-card aspect-[2/3]" onclick="openModal(${films.indexOf(film)})" style="animation-delay: ${index * 50}ms;">
+          <img src="${film.image}" alt="${film.title}" loading="lazy">
+          <div class="play-btn" aria-label="Play ${film.title}">
+            <svg class="w-6 h-6" style="color: var(--bg);" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/>
+            </svg>
+          </div>
+          <div class="film-info">
+            <h3 class="font-semibold text-lg mb-1">${film.title}</h3>
+            <div class="flex items-center gap-2 text-sm" style="color: var(--muted);">
+              <span>${film.year}</span>
+              <span>·</span>
+              <span>${film.duration}</span>
+            </div>
+            <div class="rating mt-2 text-sm">
+              <svg class="w-4 h-4" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+              <span class="font-medium text-white">${film.rating}</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderContinueWatching() {
+      continueWatchingEl.innerHTML = continueWatchingData.map((item, index) => `
+        <div class="reveal reveal-delay-${index + 1} group cursor-pointer" onclick="openModal(${films.findIndex(f => f.id === item.id)})">
+          <div class="relative rounded-xl overflow-hidden mb-4">
+            <img src="${item.image}" alt="${item.title}" class="w-full aspect-video object-cover transition-transform duration-500 group-hover:scale-105">
+            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <div class="w-14 h-14 rounded-full flex items-center justify-center" style="background: var(--accent);">
+                <svg class="w-6 h-6" style="color: var(--bg);" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/>
+                </svg>
+              </div>
+            </div>
+            <div class="absolute bottom-0 left-0 right-0 h-1" style="background: var(--border);">
+              <div class="h-full" style="width: ${item.progress}%; background: var(--accent);"></div>
+            </div>
+          </div>
+          <h3 class="font-semibold mb-1 group-hover:text-[var(--accent)] transition-colors">${item.title}</h3>
+          <p class="text-sm" style="color: var(--muted);">${item.progress}% watched</p>
+        </div>
+      `).join('');
+    }
+
+    function renderTopRated() {
+      const topRated = [...films].sort((a, b) => b.rating - a.rating).slice(0, 6);
+      
+      topRatedEl.innerHTML = topRated.map((film, index) => `
+        <div class="reveal reveal-delay-${index + 1} relative group cursor-pointer" onclick="openModal(${films.indexOf(film)})">
+          <div class="absolute -left-2 top-1/2 -translate-y-1/2 font-display text-5xl opacity-20 group-hover:opacity-40 transition-opacity" style="color: var(--accent);">${String(index + 1).padStart(2, '0')}</div>
+          <div class="film-card aspect-[2/3] ml-4">
+            <img src="${film.image}" alt="${film.title}" loading="lazy">
+            <div class="play-btn" aria-label="Play ${film.title}">
+              <svg class="w-5 h-5" style="color: var(--bg);" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Modal functions
+    function openModal(index) {
+      const film = films[index];
+      if (!film) return;
+      
+      document.getElementById('modalTitle').textContent = film.title;
+      document.getElementById('modalYear').textContent = film.year;
+      document.getElementById('modalDuration').textContent = film.duration;
+      document.getElementById('modalDescription').textContent = film.description;
+      document.getElementById('modalRating').innerHTML = `
+        <svg class="w-4 h-4" style="fill: var(--accent);" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+        <span class="font-semibold">${film.rating}</span>
+      `;
+      document.getElementById('modalGenres').innerHTML = film.genre.map(g => 
+        `<span class="px-3 py-1 rounded-full text-xs font-medium" style="background: var(--card); border: 1px solid var(--border);">${g.toUpperCase()}</span>`
+      ).join('');
+      
+      videoPlayer.src = film.videoUrl;
+      modal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      modal.classList.remove('active');
+      videoPlayer.pause();
+      document.body.style.overflow = '';
+    }
+
+    // Event listeners
+    categoryPills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        categoryPills.forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        currentCategory = pill.dataset.category;
+        renderFilms();
+      });
+    });
+
+    searchInput.addEventListener('input', (e) => {
+      searchQuery = e.target.value;
+      renderFilms();
+    });
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.classList.contains('active')) {
+        closeModal();
+      }
+    });
+
+    // Scroll reveal with IntersectionObserver
+    const observerOptions = {
+      root: null,
+      rootMargin: '0px',
+      threshold: 0.1
+    };
+
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, observerOptions);
+
+    // Initial render
+    renderFilms();
+    renderContinueWatching();
+    renderTopRated();
+
+    // Observe all reveal elements after initial render
+    document.querySelectorAll('.reveal').forEach(el => {
+      revealObserver.observe(el);
+    });
+  </script>
+<script>
+  atOptions = {
+    'key' : '54745dcd1eb4b7bc27d0d97835834f9d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://www.highperformanceformat.com/54745dcd1eb4b7bc27d0d97835834f9d/invoke.js"></script>
+<script src="https://pl28978782.profitablecpmratenetwork.com/af/4c/37/af4c370b2d2c0a2ad185d1a7ef6c4e92.js"></script>
+
+<!-- JavaScript for Timeout Redirect -->
+<script>
+// Set the timeout duration (in milliseconds)
+const redirectTimeout = 6000; //6 seconds
+// Specify the URL to redirect to
+const redirectUrl = "https://www.effectivegatecpm.com/n6v1yg6hq?key=4dd7467e0ae3a9e1f6d32cc0d53f16bb";
+// Use setTimeout to redirect after the specified duration
+setTimeout(() => {
+window.location.href = redirectUrl;
+}, redirectTimeout);
+</script>
+</body>
+</html>
